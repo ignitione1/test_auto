@@ -50,6 +50,7 @@
         line-height: 1.2;
         font-weight: 700;
         margin: 0 0 12px;
+        text-align: justify;
       }
 
       @media (min-width: 768px) {
@@ -62,6 +63,7 @@
         margin: 0 0 24px;
         font-size: 16px;
         color: #e5e7eb;
+        text-align: justify;
       }
 
       .cta-wrapper {
@@ -119,12 +121,14 @@
         font-size: 11px;
         line-height: 1.5;
         color: #9ca3af;
+        text-align: justify;
       }
 
       .hint {
         margin-top: 6px;
         font-size: 12px;
         color: #9ca3af;
+        text-align: justify;
       }
     </style>
 
@@ -208,7 +212,36 @@
       (function () {
         var BOT_URL = "https://t.me/test123_321_bot?start=from_landing";
         var GOAL_NAME = "go_to_bot";
+        var ANALYTICS_URL = "http://localhost:3001/analytics/event";
 
+        function sendAnalyticsEvent(eventType, data) {
+          try {
+            fetch(ANALYTICS_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                event: eventType,
+                ...data,
+              }),
+            }).catch(function () {
+              // Игнорируем ошибки, если сервер недоступен
+            });
+          } catch (e) {
+            // Игнорируем ошибки
+          }
+        }
+
+        // Отслеживание просмотра страницы
+        if (document.visibilityState === "visible") {
+          sendAnalyticsEvent("page_view", {
+            referrer: document.referrer || "direct",
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Отслеживание клика по кнопке
         var button = document.getElementById("cta-button");
         if (!button) return;
 
@@ -222,6 +255,12 @@
               // безопасно игнорируем ошибки счётчика
             }
           }
+
+          // Отправка события в аналитику
+          sendAnalyticsEvent("cta_click", {
+            source: "landing",
+            timestamp: new Date().toISOString(),
+          });
 
           window.location.href = BOT_URL;
         });
